@@ -1,5 +1,5 @@
 #!/bin/bash
-curl -fsSlO "https://raw.githubusercontent.com/Ninter6/m3/refs/heads/main/m3.ccm" && \
+curl -fsSLO "https://raw.githubusercontent.com/Ninter6/m3/refs/heads/main/m3.ccm" && \
 cat << EOF > m3.hpp && \
 #ifndef M3_INC
 #define M3_INC
