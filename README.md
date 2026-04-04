@@ -18,7 +18,7 @@ curl -fsSLO "https://raw.githubusercontent.com/Ninter6/m3/refs/heads/main/m3.ccm
 For those who want to use header file, trying this is recommended:
 
 ```bash
-curl -fsSl "https://raw.githubusercontent.com/Ninter6/m3/refs/heads/main/m3i.sh" | bash -s
+curl -fsSL "https://raw.githubusercontent.com/Ninter6/m3/refs/heads/main/m3i.sh" | bash -s
 ```
 
 This will create a `m3.hpp`, so that you can simply `#include` the lib.
