@@ -23,7 +23,7 @@ curl -fsSl "https://raw.githubusercontent.com/Ninter6/m3/refs/heads/main/m3i.sh"
 
 This will create a `m3.hpp`, so that you can simply `#include` the lib.
 
-# example
+## example
 
 See [svd_demo](test/svd_demo/main.cpp), which is a simple app showing a soft spinning cube.
 
