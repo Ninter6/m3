@@ -1,6 +1,3 @@
-cmake_minimum_required(VERSION 3.29)
-project(m3_tests LANGUAGES CXX)
-
 # 集成Catch2 v3（功能测试框架）
 Include(FetchContent)
 FetchContent_Declare(
@@ -35,7 +32,7 @@ target_link_libraries(m3_unit_tests PRIVATE m3 Catch2::Catch2WithMain)
 # Debug模式开启ASAN内存检测（C++数学库必做）
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-        target_compile_options(m3_unit_tests PRIVATE -fsanitize=address -g)
+        target_compile_options(m3_unit_tests PRIVATE -fsanitize=address -g -O1)
         target_link_options(m3_unit_tests PRIVATE -fsanitize=address)
     endif()
 endif()
