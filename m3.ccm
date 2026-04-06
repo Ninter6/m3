@@ -47,6 +47,7 @@ M3_EXPORT using std::floor;
 M3_EXPORT using std::ceil;
 M3_EXPORT using std::round;
 M3_EXPORT using std::clamp;
+M3_EXPORT using std::copysign;
 
 // /**
 //  * \brief find the second largest number
@@ -956,7 +957,7 @@ constexpr mat<T, 3, 3> rotate(T angle) {
 }
 
 M3_EXPORT template<class T>
-constexpr mat<T, 4, 4> rotate(const qua<T>& q){
+constexpr mat<T, 4, 4> rotate(const qua<T>& q) {
     auto&& [a, b, c, d] = q.as_array;
     return mat<T, 4, 4>{
         vec<T, 4>{1 - 2*c*c - 2*d*d, 2*b*c + 2*a*d, 2*b*d - 2*a*c, 0},
@@ -1368,191 +1369,7 @@ constexpr euler<T> euler_cast(const mat<T, 4, 4>& m, euler_seq seq) {
 
 M3_EXPORT template <class T>
 constexpr euler<T> quat_to_euler(const qua<T>& q, euler_seq seq) {
-    T a, b, c;
-    auto&& [w, x, y, z] = q.as_array;
-    constexpr T eps = std::numeric_limits<T>::epsilon();
-
-    switch (seq) {
-        case euler_seq::xyz: {
-            const T sin_b = 2 * (x * z + w * y);
-            if (abs(sin_b) >= 1 - eps) {
-                b = copysign(pi<T> / 2, sin_b);
-                c = T(0);
-                a = atan2(2 * (x * y + w * z), 1 - 2 * (x * x + z * z));
-            } else {
-                b = asin(sin_b);
-                a = atan2(2 * (w * x - y * z), 1 - 2 * (x * x + y * y));
-                c = atan2(2 * (w * z - x * y), 1 - 2 * (y * y + z * z));
-            }
-            break;
-        }
-        case euler_seq::xzy: {
-            const T sin_b = 2 * (w * z - x * y);
-            if (abs(sin_b) >= 1 - eps) {
-                b = copysign(pi<T> / 2, sin_b);
-                c = T(0);
-                a = atan2(2 * (y * z + w * x), 1 - 2 * (x * x + z * z));
-            } else {
-                b = asin(sin_b);
-                a = atan2(2 * (y * z + w * x), 1 - 2 * (x * x + y * y));
-                c = atan2(2 * (x * z + w * y), 1 - 2 * (y * y + z * z));
-            }
-            break;
-        }
-        case euler_seq::yxz: {
-            const T sin_b = 2 * (w * x - y * z);
-            if (abs(sin_b) >= 1 - eps) {
-                b = copysign(pi<T> / 2, sin_b);
-                c = T(0);
-                a = atan2(2 * (x * z + w * y), 1 - 2 * (y * y + z * z));
-            } else {
-                b = asin(sin_b);
-                a = atan2(2 * (x * z + w * y), 1 - 2 * (x * x + y * y));
-                c = atan2(2 * (x * y + w * z), 1 - 2 * (y * y + z * z));
-            }
-            break;
-        }
-        case euler_seq::yzx: {
-            const T sin_b = 2 * (w * z + x * y);
-            if (abs(sin_b) >= 1 - eps) {
-                b = copysign(pi<T> / 2, sin_b);
-                c = T(0);
-                a = atan2(2 * (y * z - w * x), 1 - 2 * (x * x + y * y));
-            } else {
-                b = asin(sin_b);
-                a = atan2(2 * (x * z - w * y), 1 - 2 * (y * y + z * z));
-                c = atan2(2 * (y * z - w * x), 1 - 2 * (x * x + z * z));
-            }
-            break;
-        }
-        case euler_seq::zxy: {
-            const T sin_b = 2 * (w * x + y * z);
-            if (abs(sin_b) >= 1 - eps) {
-                b = copysign(pi<T> / 2, sin_b);
-                c = T(0);
-                a = atan2(2 * (x * z + w * y), 1 - 2 * (y * y + z * z));
-            } else {
-                b = asin(sin_b);
-                a = atan2(2 * (x * y - w * z), 1 - 2 * (x * x + z * z));
-                c = atan2(2 * (x * z + w * y), 1 - 2 * (y * y + z * z));
-            }
-            break;
-        }
-        case euler_seq::zyx: {
-            const T sin_b = 2 * (w * y - x * z);
-            if (abs(sin_b) >= 1 - eps) {
-                b = copysign(pi<T> / 2, sin_b);
-                c = T(0);
-                a = atan2(2 * (x * y - w * z), 1 - 2 * (y * y + z * z));
-            } else {
-                b = asin(sin_b);
-                a = atan2(2 * (x * y + w * z), 1 - 2 * (y * y + z * z));
-                c = atan2(2 * (y * z + w * x), 1 - 2 * (x * x + y * y));
-            }
-            break;
-        }
-        case euler_seq::xyx: {
-            const T cos_b = 1 - 2 * (y * y + z * z);
-            const T sin_b_sq = (2 * (x * y + w * z)) * (2 * (x * y + w * z))
-                             + (2 * (x * z - w * y)) * (2 * (x * z - w * y));
-            const T sin_b = sqrt(sin_b_sq);
-            if (sin_b < eps) {
-                b = acos(cos_b);
-                c = T(0);
-                a = atan2(2 * (w * x + y * z), 1 - 2 * (x * x + y * y));
-            } else {
-                b = atan2(sin_b, cos_b);
-                a = atan2(2 * (x * y + w * z), -2 * (x * z - w * y));
-                c = atan2(2 * (x * y - w * z), 2 * (x * z + w * y));
-            }
-            break;
-        }
-        case euler_seq::yxy: {
-            const T cos_b = 1 - 2 * (x * x + z * z);
-            const T sin_b_sq = (2 * (x * y - w * z)) * (2 * (x * y - w * z))
-                             + (2 * (y * z + w * x)) * (2 * (y * z + w * x));
-            const T sin_b = sqrt(sin_b_sq);
-            if (sin_b < eps) {
-                b = acos(cos_b);
-                c = T(0);
-                a = atan2(2 * (x * y + w * z), 1 - 2 * (x * x + y * y));
-            } else {
-                b = atan2(sin_b, cos_b);
-                a = atan2(2 * (x * y - w * z), 2 * (y * z + w * x));
-                c = atan2(2 * (x * y + w * z), -2 * (y * z - w * x));
-            }
-            break;
-        }
-        case euler_seq::xzx: {
-            const T cos_b = 1 - 2 * (y * y + z * z);
-            const T sin_b_sq = (2 * (x * z - w * y)) * (2 * (x * z - w * y))
-                             + (2 * (x * y + w * z)) * (2 * (x * y + w * z));
-            const T sin_b = sqrt(sin_b_sq);
-            if (sin_b < eps) {
-                b = acos(cos_b);
-                c = T(0);
-                a = atan2(2 * (w * x - y * z), 1 - 2 * (x * x + y * y));
-            } else {
-                b = atan2(sin_b, cos_b);
-                a = atan2(2 * (x * z - w * y), 2 * (x * y + w * z));
-                c = atan2(2 * (x * z + w * y), -2 * (x * y - w * z));
-            }
-            break;
-        }
-        case euler_seq::zxz: {
-            const T cos_b = 1 - 2 * (x * x + y * y);
-            const T sin_b_sq = (2 * (x * z + w * y)) * (2 * (x * z + w * y))
-                             + (2 * (y * z - w * x)) * (2 * (y * z - w * x));
-            const T sin_b = sqrt(sin_b_sq);
-            if (sin_b < eps) {
-                b = acos(cos_b);
-                c = T(0);
-                a = atan2(2 * (x * y + w * z), 1 - 2 * (y * y + z * z));
-            } else {
-                b = atan2(sin_b, cos_b);
-                a = atan2(2 * (x * z + w * y), -2 * (y * z - w * x));
-                c = atan2(2 * (x * z - w * y), 2 * (y * z + w * x));
-            }
-            break;
-        }
-        case euler_seq::yzy: {
-            const T cos_b = 1 - 2 * (x * x + z * z);
-            const T sin_b_sq = (2 * (y * z - w * x)) * (2 * (y * z - w * x))
-                             + (2 * (x * y + w * z)) * (2 * (x * y + w * z));
-            const T sin_b = sqrt(sin_b_sq);
-            if (sin_b < eps) {
-                b = acos(cos_b);
-                c = T(0);
-                a = atan2(2 * (y * z + w * x), 1 - 2 * (y * y + z * z));
-            } else {
-                b = atan2(sin_b, cos_b);
-                a = atan2(2 * (y * z - w * x), 2 * (x * y + w * z));
-                c = atan2(2 * (y * z + w * x), -2 * (x * y - w * z));
-            }
-            break;
-        }
-        case euler_seq::zyz: {
-            const T cos_b = 1 - 2 * (x * x + y * y);
-            const T sin_b_sq = (2 * (y * z + w * x)) * (2 * (y * z + w * x))
-                             + (2 * (x * z - w * y)) * (2 * (x * z - w * y));
-            const T sin_b = sqrt(sin_b_sq);
-            if (sin_b < eps) {
-                b = acos(cos_b);
-                c = T(0);
-                a = atan2(2 * (x * y - w * z), 1 - 2 * (y * y + z * z));
-            } else {
-                b = atan2(sin_b, cos_b);
-                a = atan2(2 * (y * z + w * x), -2 * (x * z - w * y));
-                c = atan2(2 * (y * z - w * x), 2 * (x * z + w * y));
-            }
-            break;
-        }
-        default: {
-            a = b = c = T(0);
-            break;
-        }
-    }
-    return {a, b, c};
+    return euler_cast(rotate(q), seq);
 }
 
 M3_EXPORT template <class T, std::size_t N>
@@ -1578,14 +1395,14 @@ constexpr eigen_result<T, N> eigen(mat<T, N, N> A, T tol = 1e-8, std::size_t max
 
         if (abs(A[p][q]) <= tol) break;
 
-        auto App = A[p][p], Aqq = A[q][q];
-        auto y = (Aqq - App) / A[p][q] * T(.5);
-        auto t = hypot(1, y) - abs(y);
-        auto s = (y > 0 ? -1 : 1) / hypot(1, t);
-        auto c = t * abs(s);
+        T App = A[p][p], Aqq = A[q][q];
+        T y = (Aqq - App) / A[p][q] * T(.5);
+        T t = hypot(T(1), y) - abs(y);
+        T s = (y > 0 ? T(-1) : T(1)) / hypot(T(1), t);
+        T c = t * abs(s);
 
-        A[p][p] = App*c*c + Aqq*s*s - 2*A[p][q]*s*c;
-        A[q][q] = App*s*s + Aqq*c*c + 2*A[p][q]*s*c;
+        A[p][p] = App*c*c + Aqq*s*s - T(2)*A[p][q]*s*c;
+        A[q][q] = App*s*s + Aqq*c*c + T(2)*A[p][q]*s*c;
         A[p][q] = A[q][p] = 0;
         for (std::size_t i = 0; i < N; ++i) {
             if (i == p || i == q) continue;

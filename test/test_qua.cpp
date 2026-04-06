@@ -104,7 +104,7 @@ TEST_CASE("qua: 旋转功能验证", "[qua]") {
 
     SECTION("矩阵转换") {
         auto q = quat_cast(R);
-        vec3 v{1, 0, 0};
+        vec3 v = rand_unit_vec3(eng);
 
         auto test_m_v = mat3(R)*v;
         auto test_q_v = q*v;
@@ -124,11 +124,19 @@ TEST_CASE("qua: 旋转功能验证", "[qua]") {
 
     SECTION("欧拉角转换") {
         {
-            euler<float> e{PI/2.0f, 0, 0};
+            auto ev = rand_unit_vec3(eng) * pi<>;
+            euler e{ev.x, ev.y, ev.z};
             quat q = quat::from_euler(e, euler_seq::xyz);
-            vec3 v{0,1,0};
-            vec3 res = q * v;
-            REQUIRE_THAT(res.z, WithinAbs(1.0f, EPS));
+            vec3 v = rand_unit_vec3(eng);
+            auto rot_e =
+                  rotate({1, 0, 0}, ev.x)
+                * rotate({0, 1, 0}, ev.y)
+                * rotate({0, 0, 1}, ev.z);
+            vec3 test_q_v = q * v;
+            vec3 test_e_v = vec3(rot_e * vec4(v, 1));
+            REQUIRE_THAT(test_q_v.x, WithinAbs(test_e_v.x, EPS));
+            REQUIRE_THAT(test_q_v.y, WithinAbs(test_e_v.y, EPS));
+            REQUIRE_THAT(test_q_v.z, WithinAbs(test_e_v.z, EPS));
         }
         {
             auto q = quat_cast(R);
