@@ -194,6 +194,10 @@ struct vec : basic_vec<T, N> {
         return true;
     }
 
+    [[nodiscard]] constexpr bool is_unit() const {
+        return abs(length() - T(1)) <= std::numeric_limits<T>::epsilon();
+    }
+
     constexpr T sum() const {
         return std::accumulate(begin(), end(), T{});
     }
@@ -318,6 +322,11 @@ constexpr auto operator/(const vec<T, N>& lhs, std::common_with<T> auto&& rhs) {
 M3_EXPORT template <class T, std::size_t N>
 constexpr auto operator/(std::common_with<T> auto&& lhs, const vec<T, N>& rhs) {
     return vec<T, N>{lhs} / rhs;
+}
+
+M3_EXPORT template <class T, std::size_t N>
+constexpr bool is_unit(const vec<T, N>& v) {
+    return v.is_unit();
 }
 
 M3_EXPORT template <class T, std::size_t N>
@@ -574,7 +583,7 @@ M3_EXPORT enum class euler_seq {
 };
 
 M3_EXPORT template <class T>
-struct qua{
+struct qua {
     union {
         struct { T w, x, y, z; };
         struct { T l, i, j, k; };
@@ -607,6 +616,21 @@ struct qua{
 
     constexpr bool operator==(const qua& o) const {
         return w==o.w && x==o.x && y==o.y && z==o.z;
+    }
+
+    [[nodiscard]] constexpr bool is_unit() const {
+        return abs(length() - T(1)) <= std::numeric_limits<T>::epsilon();
+    }
+
+    constexpr auto ln() const {
+        assert(is_unit());
+        vec<T, 3> r{x, y, z};
+        if (auto l = r.length(); l > std::numeric_limits<T>::epsilon())
+            return r / l * atan2(l, w);
+        return r;
+    }
+    constexpr vec<T, 3> to_rot_vec() const {
+        return ln() * T(2);
     }
 
     constexpr T length_squared() const { return w*w + x*x + y*y + z*z; }
@@ -736,7 +760,13 @@ qua<T> operator/(const qua<T>& lhs, const qua<T>& rhs) {
 }
 
 M3_EXPORT template <class T>
+constexpr bool is_unit(const qua<T>& q) {
+    return q.unit();
+}
+
+M3_EXPORT template <class T>
 constexpr vec<T, 3> operator*(const qua<T>& q, const vec<T, 3>& v) {
+    assert(is_unit(q));
     qua p = {T(0), v.x, v.y, v.z};
     qua r = q * p * q.conjugate();
     return vec<T, 3>{r.x, r.y, r.z};
@@ -755,6 +785,11 @@ constexpr T length(const qua<T>& q) {
 M3_EXPORT template <class T>
 constexpr auto normalize(const qua<T>& q) {
     return q.normalized();
+}
+
+M3_EXPORT template <class T>
+constexpr auto ln(const qua<T>& q) {
+    return q.ln();
 }
 
 template <class T>
@@ -960,6 +995,7 @@ constexpr mat<T, 3, 3> rotate(T angle) {
 
 M3_EXPORT template<class T>
 constexpr mat<T, 4, 4> rotate(const qua<T>& q) {
+    assert(is_unit(q));
     auto&& [a, b, c, d] = q.as_array;
     return mat<T, 4, 4>{
         vec<T, 4>{1 - 2*c*c - 2*d*d, 2*b*c + 2*a*d, 2*b*d - 2*a*c, 0},

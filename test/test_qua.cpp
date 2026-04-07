@@ -70,9 +70,11 @@ TEST_CASE("qua: 核心数学函数", "[qua]") {
         quat q{1,1,1,1};
         REQUIRE_THAT(q.length_squared(), WithinAbs(4.0f, EPS));
         REQUIRE_THAT(q.length(), WithinAbs(2.0f, EPS));
+        REQUIRE(!q.is_unit());
 
         quat n = q.normalized();
         REQUIRE_THAT(n.length(), WithinAbs(1.0f, EPS));
+        REQUIRE(n.is_unit());
     }
 
     SECTION("共轭与逆") {
@@ -147,6 +149,16 @@ TEST_CASE("qua: 旋转功能验证", "[qua]") {
                 // 验证欧拉角闭环转换
                 REQUIRE_THAT(test_q[i], WithinAbs(q[i], EPS));
             }
+        }
+    }
+
+    SECTION("旋转向量转换") {
+        auto q = quat_cast(R);
+        auto rv = q.to_rot_vec();
+
+        auto test_q = quat::from_rot_vec(rv);
+        for (int i = 0; i < 4; ++i) {
+            REQUIRE_THAT(test_q[i], WithinAbs(q[i], EPS));
         }
     }
 }
