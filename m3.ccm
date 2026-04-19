@@ -1026,7 +1026,7 @@ constexpr mat<T, N+1, N+1> scale(const vec<T, N>& s) {
 
 M3_EXPORT template <class T>
 constexpr mat<T, 4, 4> look_in(const vec<T, 3>& eye, const vec<T, 3>& dir, const vec<T, 3>& up) {
-    vec<T, 3> d = dir.normalized();
+    vec<T, 3> d =-dir.normalized();
     vec<T, 3> r = cross(up, d).normalized();
     vec<T, 3> u = cross(d, r);
     mat<T, 4, 4> m {
@@ -1100,8 +1100,8 @@ constexpr mat<T, 4, 4> perspective_d11(T fov, T asp, T near) {
     m[0][0] = a / asp;
     m[1][1] = a;
     m[2][2] = T(-1);
-    m[2][3] = T(1);
-    m[3][2] = T(2)*near;
+    m[2][3] = T(-1);
+    m[3][2] = T(-2)*near;
     return m;
 }
 
@@ -1112,7 +1112,7 @@ constexpr mat<T, 4, 4> perspective_d01(T fov, T asp, T near) {
     m[0][0] = a / asp;
     m[1][1] = a;
     m[2][3] = T(1);
-    m[3][2] = near;
+    m[3][2] =-near;
     return m;
 }
 
