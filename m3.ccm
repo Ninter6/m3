@@ -761,7 +761,7 @@ qua<T> operator/(const qua<T>& lhs, const qua<T>& rhs) {
 
 M3_EXPORT template <class T>
 constexpr bool is_unit(const qua<T>& q) {
-    return q.unit();
+    return q.is_unit();
 }
 
 M3_EXPORT template <class T>
